@@ -94,7 +94,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(story, index) in stories" :key='index'  :class="story.story_type">
+            <tr v-for="(story, index) in stories" :key='index' :class="story.story_type" v-if="story.story_type !== 'release'">
               <td>{{ story.id }}</td>
               <td>{{ story.story_type }}</td>
               <td><a :href="story.url" target="_blank">{{ story.name }}</a></td>
@@ -135,6 +135,7 @@ export default {
   }),
   methods: {
     aggregateData(data) {
+      let storiesTotalCount = 0;
       let storiesCompleteCount = 0;
       let bugCompleteCount = 0;
       let bugTotalCount = 0;
@@ -148,13 +149,13 @@ export default {
       let zenDeskTotalCount = 0;
 
 
-      this.storiesTotal = data.length;
       // TODO:  YUCK.  This is silly.  Is it better to make more API requests or loop
       // over everything we have to get what we want?  Is there a better way to tally
       // all of this?
       data.forEach((element) => {
         switch (element.story_type) {
           case 'bug':
+            storiesTotalCount += 1;
             bugTotalCount += 1;
             if (element.external_id) {
               zenDeskTotalCount += 1;
@@ -169,6 +170,7 @@ export default {
             }
             break;
           case 'chore':
+            storiesTotalCount += 1;
             choreTotalCount += 1;
             if (element.current_state === 'accepted') {
               storiesCompleteCount += 1;
@@ -176,6 +178,7 @@ export default {
             }
             break;
           case 'feature':
+            storiesTotalCount += 1;
             featureTotalCount += 1;
             pointsTotalCount += element.estimate;
             if (element.current_state === 'accepted') {
@@ -186,11 +189,13 @@ export default {
             break;
           default:
             // Do nothing for other story types
+            // (Release bars, for example)
             break;
         }
       });
 
       this.storiesComplete = storiesCompleteCount;
+      this.storiesTotal = storiesTotalCount;
       this.featuresComplete = featureCompleteCount;
       this.featuresTotal = featureTotalCount;
       this.bugsComplete = bugCompleteCount;
@@ -324,19 +329,8 @@ $features-color: #79c447;
 
 .table {
   margin-top: 40px;
-
-  .bug {
-    background-color: lighten($bugs-color, 30%);
-  }
-
-  .feature {
-    background-color: lighten($features-color, 30%);
-  }
-
-  .chore {
-    background-color: lighten($chores-color, 30%);
-  }
 }
+
 
 a {
   color: darken($stories-color, 20%);
